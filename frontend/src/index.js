@@ -1,11 +1,14 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
 
+import { Progress } from 'react-sweet-progress'
+import "react-sweet-progress/lib/style.css"
+
 
 class App extends React.Component {
     render() {
         return (
-            <div> hello fellow humans </div>
+            <Progress type="circle" percent={88} status="active" />
         )
     }
 }

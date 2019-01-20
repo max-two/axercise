@@ -1,8 +1,8 @@
-import React from 'react'
-import ReactDOM from 'react-dom'
+import React from 'react';
+import ReactDOM from 'react-dom';
 
-import { Progress } from 'react-sweet-progress'
-import "react-sweet-progress/lib/style.css"
+import { Progress } from 'react-sweet-progress';
+import "react-sweet-progress/lib/style.css";
 
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
@@ -10,10 +10,18 @@ import TableCell from '@material-ui/core/TableCell';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 
-// import { DatePicker } from 'material-ui-pickers';
-
+import { MuiPickersUtilsProvider, DatePicker } from 'material-ui-pickers';
+import DateFnsUtils from '@date-io/date-fns';
 
 class App extends React.Component {
+    state = {
+        selectedDate: new Date(),
+    }
+
+    handleDateChange = selectedDate => {
+        this.setState({ selectedDate });
+    }
+
     render() {
         return (
             <div>
@@ -32,7 +40,9 @@ class App extends React.Component {
                     <TableBody>
                         <TableRow>
                             <TableCell>
-                                {/* <DateTimePicker /> */}
+                                <MuiPickersUtilsProvider utils={DateFnsUtils}>
+                                    <DatePicker value={this.state.selectedDate} onChange={this.handleDateChange} />
+                                </MuiPickersUtilsProvider>
                             </TableCell>
                             <TableCell> Biking </TableCell>
                         </TableRow>
@@ -43,4 +53,4 @@ class App extends React.Component {
     }
 }
 
-ReactDOM.render(<App />, document.querySelector('#app'))
+ReactDOM.render(<App />, document.querySelector('#app'));

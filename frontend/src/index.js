@@ -4,53 +4,95 @@ import ReactDOM from 'react-dom';
 import { Progress } from 'react-sweet-progress';
 import "react-sweet-progress/lib/style.css";
 
-import Table from '@material-ui/core/Table';
-import TableBody from '@material-ui/core/TableBody';
-import TableCell from '@material-ui/core/TableCell';
-import TableHead from '@material-ui/core/TableHead';
-import TableRow from '@material-ui/core/TableRow';
+import Fab from '@material-ui/core/Fab';
+import AddIcon from '@material-ui/icons/Add';
 
-import { MuiPickersUtilsProvider, DatePicker } from 'material-ui-pickers';
-import DateFnsUtils from '@date-io/date-fns';
+import WorkoutTable from './WorkoutTable';
+
 
 class App extends React.Component {
+    monthlyPoints = 12;
+    yearlyPoints = 160;
+
     state = {
         selectedDate: new Date(),
+        workouts: [],
     }
 
-    handleDateChange = selectedDate => {
-        this.setState({ selectedDate });
+    addWorkout = () => {
+        this.setState({
+            workouts: [...this.state.workouts, {
+                date: new Date(),
+                description: "",
+                teamEvent: false,
+                organized: false,
+            }]
+        });
     }
+
+    updateWorkout = (index, field, object, value) => {
+        let workouts = this.state.workouts.slice();
+        workouts[index] = { ...workouts[index], [field]: value };
+
+        this.setState({ workouts });
+    }
+
+    calcPoints = workout => {
+        const teamEventPoints = workout.teamEvent ? 1 : 0;
+        const organizedPoints = workout.organized ? 1 : 0;
+
+        return 1 + teamEventPoints + organizedPoints;
+    }
+
+    calcMonthProgress = () => {
+        const points = this.state.workouts.reduce((points, workout) => {
+            const today = new Date();
+            const thisMonth = workout.date.getMonth() === today.getMonth() && workout.date.getYear() === today.getYear();
+
+            return thisMonth ? points + this.calcPoints(workout) : points;
+        }, 0);
+
+        const progress = Math.floor((points / this.monthlyPoints) * 100);
+
+        return progress > 100 ? 100 : progress;
+    }
+
+    calcYearProgress = () => {
+        const points = this.state.workouts.reduce((points, workout) => {
+            const today = new Date();
+            const thisYear = workout.date.getYear() === today.getYear();
+
+            return thisYear ? points + this.calcPoints(workout) : points;
+        }, 0);
+
+        const progress = Math.floor((points / this.yearlyPoints) * 100);
+
+        return progress > 100 ? 100 : progress;
+    }
+
+    calcStatus = progress => progress === 100 ? 'success' : 'active'
 
     render() {
+        const monthProgress = this.calcMonthProgress();
+        const yearProgress = this.calcYearProgress();
+
+        const monthStatus = this.calcStatus(monthProgress);
+        const yearStatus = this.calcStatus(monthStatus);
+
         return (
-            <div>
+            <React.Fragment>
                 <h1> Axercise </h1>
                 <span>
-                    <Progress type="circle" percent={88} status="active" />
-                    <Progress type="circle" percent={33} status="success" />
+                    <Progress type="circle" percent={monthProgress} status={monthStatus} />
+                    <Progress type="circle" percent={yearProgress} status={yearStatus} />
                 </span>
-                <Table>
-                    <TableHead>
-                        <TableRow>
-                            <TableCell> Date </TableCell>
-                            <TableCell> Description </TableCell>
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        <TableRow>
-                            <TableCell>
-                                <MuiPickersUtilsProvider utils={DateFnsUtils}>
-                                    <DatePicker value={this.state.selectedDate} onChange={this.handleDateChange} />
-                                </MuiPickersUtilsProvider>
-                            </TableCell>
-                            <TableCell> Biking </TableCell>
-                        </TableRow>
-                    </TableBody>
-                </Table>
-            </div>
+                <WorkoutTable workouts={this.state.workouts} updateWorkout={this.updateWorkout} calcPoints={this.calcPoints} />
+                <Fab color="primary" onClick={this.addWorkout}>
+                    <AddIcon />
+                </Fab>
+            </React.Fragment>
         )
     }
 }
 
-ReactDOM.render(<App />, document.querySelector('#app'));
+ReactDOM.render(<App />, document.getElementById('app'));

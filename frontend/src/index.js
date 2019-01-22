@@ -1,12 +1,10 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 
-import { Progress } from 'react-sweet-progress';
-import "react-sweet-progress/lib/style.css";
+import Button from '@material-ui/core/Button';
+import { Add, LockOutlined } from '@material-ui/icons';
 
-import Fab from '@material-ui/core/Fab';
-import AddIcon from '@material-ui/icons/Add';
-
+import WorkoutProgress from './WorkoutProgress';
 import WorkoutTable from './WorkoutTable';
 
 
@@ -70,26 +68,28 @@ class App extends React.Component {
         return progress > 100 ? 100 : progress;
     }
 
-    calcStatus = progress => progress === 100 ? 'success' : 'active'
-
     render() {
         const monthProgress = this.calcMonthProgress();
         const yearProgress = this.calcYearProgress();
 
-        const monthStatus = this.calcStatus(monthProgress);
-        const yearStatus = this.calcStatus(monthStatus);
-
         return (
             <React.Fragment>
-                <h1> Axercise </h1>
-                <span>
-                    <Progress type="circle" percent={monthProgress} status={monthStatus} />
-                    <Progress type="circle" percent={yearProgress} status={yearStatus} />
+                <div className='grid-container'>
+                    <h1 className='title'> Axercise </h1>
+                    <WorkoutProgress className='progress-bar-left' label='Monthly Progress' progress={monthProgress} />
+                    <WorkoutProgress className='progress-bar-right' label='Yearly Progress' progress={yearProgress} />
+                    <div className='workout-table'>
+                        <WorkoutTable workouts={this.state.workouts} updateWorkout={this.updateWorkout} calcPoints={this.calcPoints} />
+                    </div>
+                </div>
+                <span className='buttons'>
+                    <Button className='button' color='primary' variant='contained' onClick={this.addWorkout}>
+                        Add Workout<Add className='icon' />
+                    </Button>
+                    <Button className='button' color='secondary' variant='contained' onClick={this.addWorkout}>
+                        Save Workouts<LockOutlined className='icon' />
+                    </Button>
                 </span>
-                <WorkoutTable workouts={this.state.workouts} updateWorkout={this.updateWorkout} calcPoints={this.calcPoints} />
-                <Fab color="primary" onClick={this.addWorkout}>
-                    <AddIcon />
-                </Fab>
             </React.Fragment>
         )
     }

@@ -1,0 +1,47 @@
+.grid-container {
+    display: grid;
+    grid-template-areas: 
+        'title title'
+        'progress-bar-left progress-bar-right'
+        'workout-table workout-table'
+    ;
+    justify-items: center;
+    row-gap: 40px;
+}
+
+.title {
+    grid-area: title;
+}
+
+.progress-bar-left {
+    grid-area: progress-bar-left;
+    justify-self: end;
+    margin-right: 5rem;
+}
+
+.progress-bar-right {
+    grid-area: progress-bar-right;
+    justify-self: start;
+    margin-left: 5rem;
+}
+
+.workout-table {
+    grid-area: workout-table;
+    width: 100%;
+    height: 400px;
+}
+
+.buttons .button {
+    margin-top: 3em;
+    margin-left: 1rem;
+    margin-right: 1rem;
+}
+
+/* TODO: Move this to workout progress css */
+.progressLabel {
+    text-align: center;
+}
+
+.icon {
+    margin-left: 0.5rem;
+}

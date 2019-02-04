@@ -7,6 +7,8 @@ import { Add, LockOutlined } from '@material-ui/icons';
 import WorkoutProgress from './WorkoutProgress';
 import WorkoutTable from './WorkoutTable';
 
+import secrets from '../secrets.json';
+
 
 class App extends React.Component {
     monthlyPoints = 12;
@@ -15,6 +17,54 @@ class App extends React.Component {
     state = {
         selectedDate: new Date(),
         workouts: [],
+        auth: {},
+        email: ''
+    }
+
+    componentDidMount() {
+        gapi.load('client:auth2', this.initClient);
+    }
+
+    initClient = () => {
+        gapi.client.init(secrets.gapi).then(() => {
+            const auth = gapi.auth2.getAuthInstance();
+            auth.isSignedIn.listen(this.updateSigninStatus);
+            this.setState({ auth }, this.updateSigninStatus.bind(null, auth.isSignedIn.get()));
+        }, error => {
+            console.error(JSON.stringify(error, null, 2));
+        });
+    }
+
+    updateSigninStatus = isSignedIn => {
+        if (isSignedIn) {
+            this.setState({ email: this.state.auth.currentUser.get().getBasicProfile().getEmail() });
+        } else {
+            this.setState({ email: '' });
+        }
+    }
+
+    signIn = () => {
+        this.state.auth.signIn();
+    }
+
+    signOut = () => {
+        this.state.auth.signOut();
+    }
+
+    saveWorkouts = () => {
+        const email = this.state.email;
+        const values = this.state.workouts
+            .filter(workout => !workout.saved)
+            .map(workout => [email, workout.date, workout.description, workout.teamEvent, workout.organized]);
+
+        gapi.client.sheets.spreadsheets.values.append({
+            spreadsheetId: secrets.spreadsheetId,
+            range: 'A1',
+            valueInputOption: 'USER_ENTERED',
+            resource: { values }
+        }).then(response => {
+            console.log(response);
+        });
     }
 
     addWorkout = () => {
@@ -24,6 +74,7 @@ class App extends React.Component {
                 description: "",
                 teamEvent: false,
                 organized: false,
+                saved: false
             }]
         });
     }
@@ -86,7 +137,7 @@ class App extends React.Component {
                     <Button className='button' color='primary' variant='contained' onClick={this.addWorkout}>
                         Add Workout<Add className='icon' />
                     </Button>
-                    <Button className='button' color='secondary' variant='contained' onClick={this.addWorkout}>
+                    <Button className='button' color='secondary' variant='contained' onClick={this.saveWorkouts}>
                         Save Workouts<LockOutlined className='icon' />
                     </Button>
                 </span>
@@ -96,5 +147,3 @@ class App extends React.Component {
 }
 
 ReactDOM.render(<App />, document.getElementById('app'));
-
-

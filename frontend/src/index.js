@@ -30,6 +30,7 @@ class App extends React.Component {
             const auth = gapi.auth2.getAuthInstance();
             auth.isSignedIn.listen(this.updateSigninStatus);
             this.setState({ auth }, this.updateSigninStatus.bind(null, auth.isSignedIn.get()));
+            this.loadWorkouts();
         }, error => {
             console.error(JSON.stringify(error, null, 2));
         });
@@ -51,6 +52,7 @@ class App extends React.Component {
         this.state.auth.signOut();
     }
 
+    // TODO: validation/required fields
     saveWorkouts = () => {
         const email = this.state.email;
         const values = this.state.workouts
@@ -59,11 +61,33 @@ class App extends React.Component {
 
         gapi.client.sheets.spreadsheets.values.append({
             spreadsheetId: secrets.spreadsheetId,
-            range: 'A1',
+            range: 'A2',
             valueInputOption: 'USER_ENTERED',
             resource: { values }
         }).then(response => {
             console.log(response);
+        });
+    }
+
+    loadWorkouts = () => {
+        gapi.client.sheets.spreadsheets.values.get({
+            spreadsheetId: secrets.spreadsheetId,
+            range: 'A2:E',
+        }).then(response => {
+            const workouts = response.result.values
+                .filter(workout => workout[0] === this.state.email)
+                .map(workout => ({
+                    date: new Date(workout[1]),
+                    description: workout[2],    // TODO: Hook up this value
+                    teamEvent: workout[3] === 'TRUE' ? true : false,
+                    organized: workout[4] === 'TRUE' ? true : false,
+                    saved: true
+                })
+                );
+
+            this.setState({ workouts })
+        }, response => {
+            console.error('Error: ' + response.result.error.message);
         });
     }
 
@@ -79,7 +103,9 @@ class App extends React.Component {
         });
     }
 
-    updateWorkout = (index, field, object, value) => {
+    updateWorkout = (index, field, event, checked) => {
+        const value = checked ? checked : event.target.value;   // The checkboxes handle onChange callbacks by passing in a specific checked parameter
+
         let workouts = this.state.workouts.slice();
         workouts[index] = { ...workouts[index], [field]: value };
 

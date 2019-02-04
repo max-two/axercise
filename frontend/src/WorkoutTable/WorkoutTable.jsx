@@ -34,20 +34,29 @@ class WorkoutTable extends React.Component {
                     </TableCell>
                     <TableCell>
                         <MuiPickersUtilsProvider utils={DateFnsUtils}>
-                            <DatePicker value={workout.date} onChange={this.handleDateChange.bind(null, index)} />
+                            <DatePicker
+                                value={workout.date}
+                                onChange={this.handleDateChange.bind(null, index)}
+                            />
                         </MuiPickersUtilsProvider>
                     </TableCell>
                     <TableCell>
                         <TextField
                             id={`description-${index}`}
-                            margin="normal"
+                            onChange={this.props.updateWorkout.bind(null, index, 'description')}
                         />
                     </TableCell>
                     <TableCell padding="checkbox">
-                        <Checkbox onChange={this.props.updateWorkout.bind(null, index, 'teamEvent')} />
+                        <Checkbox
+                            checked={workout.teamEvent}
+                            onChange={this.props.updateWorkout.bind(null, index, 'teamEvent')}
+                        />
                     </TableCell>
                     <TableCell padding="checkbox">
-                        <Checkbox onChange={this.props.updateWorkout.bind(null, index, 'organized')} />
+                        <Checkbox
+                            checked={workout.organized}
+                            onChange={this.props.updateWorkout.bind(null, index, 'organized')}
+                        />
                     </TableCell>
                     <TableCell>
                         {this.props.calcPoints(workout)}

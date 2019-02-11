@@ -19,6 +19,21 @@ class App extends React.Component {
     monthlyPoints = 12;
     yearlyPoints = 160;
 
+    months = [
+        'January',
+        'February',
+        'March',
+        'April',
+        'May',
+        'June',
+        'July',
+        'August',
+        'September',
+        'October',
+        'November',
+        'December'
+    ];
+
     state = {
         selectedDate: new Date(),
         workouts: [],
@@ -60,7 +75,7 @@ class App extends React.Component {
     getWorkouts = cb => {
         gapi.client.sheets.spreadsheets.values.get({
             spreadsheetId: secrets.spreadsheetId,
-            range: 'A2:F',
+            range: `${this.getMonth()}!A2:F`,
         }).then(response => {
             cb(response.result.values);
         }, response => {
@@ -70,7 +85,38 @@ class App extends React.Component {
 
     // TODO: validation/required fields
     saveWorkouts = () => {
+        // Check for this month's sheet
+        gapi.client.sheets.spreadsheets.get({ spreadsheetId: secrets.spreadsheetId }).then(response => {
+            const sheets = response.result.sheets;
+            const month = this.getMonth();
+
+            const sheetExists = sheets.map(sheet => sheet.properties.title).includes(month);
+
+            // TODO: this block of logic could be way cleaner with async/await
+            if (sheetExists) {
+                this.writeWorkouts();
+            } else {
+                gapi.client.sheets.spreadsheets.batchUpdate({
+                    spreadsheetId: secrets.spreadsheetId
+                }, {
+                        requests: [
+                            {
+                                addSheet: {
+                                    properties: { title: month }    // TODO: create the headers
+                                }
+                            }
+                        ]
+                    }
+                ).then(response => {
+                    this.writeWorkouts();
+                });
+            }
+        });
+    }
+
+    writeWorkouts = () => {
         const email = this.state.email;
+        const month = this.getMonth();
 
         const updatedWorkouts = this.state.workouts
             .filter(workout => workout.status === UPDATED)
@@ -86,11 +132,9 @@ class App extends React.Component {
             updatedWorkouts.forEach(updatedWorkout => {
                 const index = workouts.findIndex(workout => workout[1] === updatedWorkout[1]);
 
-                console.log('index', index)
-
                 gapi.client.sheets.spreadsheets.values.update({
                     spreadsheetId: secrets.spreadsheetId,
-                    range: `A${index + 2}`,
+                    range: `${month}!A${index + 2}`,
                     valueInputOption: 'USER_ENTERED',
                     resource: { values: [updatedWorkout] }
                 }).then(response => {
@@ -101,9 +145,9 @@ class App extends React.Component {
         });
 
         // Save unsaved workouts
-        gapi.client.sheets.spreadsheets.values.append({
+        unsavedWorkouts.length > 0 && gapi.client.sheets.spreadsheets.values.append({
             spreadsheetId: secrets.spreadsheetId,
-            range: 'A2',
+            range: `${month}!A2`,
             valueInputOption: 'USER_ENTERED',
             resource: { values: unsavedWorkouts }
         }).then(response => {
@@ -150,10 +194,15 @@ class App extends React.Component {
         workouts[index] = {
             ...workouts[index],
             ...update,
-            status: workouts[index].status === SAVED ? UPDATED : UNSAVED
+            status: workouts[index].status === UNSAVED ? UNSAVED : UPDATED
         };
 
         this.setState({ workouts });
+    }
+
+    getMonth = () => {
+        const date = new Date();
+        return this.months[date.getMonth()];
     }
 
     calcPoints = workout => {

@@ -24,11 +24,14 @@ class WorkoutTable extends React.Component {
     }
 
     handleTeamEventChange = (id, event, checked) => {
-        this.props.updateWorkout(id, { teamEvent: checked });
+        let update = { teamEvent: checked };
+        if (!checked) update.organized = checked;
+
+        this.props.updateWorkout(id, update);
     }
 
     handleOrganizedChange = (id, event, checked) => {
-        let update = { organized: checked }
+        let update = { organized: checked };
         if (checked) update.teamEvent = checked;
 
         this.props.updateWorkout(id, update);

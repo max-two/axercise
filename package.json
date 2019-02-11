@@ -19,7 +19,8 @@
     "material-ui-pickers": "^2.1.1",
     "react": "^16.7.0",
     "react-dom": "^16.7.0",
-    "react-sweet-progress": "^1.1.2"
+    "react-sweet-progress": "^1.1.2",
+    "uuid": "^3.3.2"
   },
   "devDependencies": {
     "@babel/core": "^7.2.2",

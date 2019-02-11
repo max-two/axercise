@@ -1,6 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 
+import uuid from 'uuid/v1';
+
 import Button from '@material-ui/core/Button';
 import { Add, LockOutlined } from '@material-ui/icons';
 
@@ -9,6 +11,9 @@ import WorkoutTable from './WorkoutTable';
 
 import secrets from '../secrets.json';
 
+const UNSAVED = "unsaved";
+const SAVED = "saved";
+const UPDATED = "updated";
 
 class App extends React.Component {
     monthlyPoints = 12;
@@ -52,62 +57,101 @@ class App extends React.Component {
         this.state.auth.signOut();
     }
 
+    getWorkouts = cb => {
+        gapi.client.sheets.spreadsheets.values.get({
+            spreadsheetId: secrets.spreadsheetId,
+            range: 'A2:F',
+        }).then(response => {
+            cb(response.result.values);
+        }, response => {
+            console.error('Error: ' + response.result.error.message);
+        });
+    }
+
     // TODO: validation/required fields
     saveWorkouts = () => {
         const email = this.state.email;
-        const values = this.state.workouts
-            .filter(workout => !workout.saved)
-            .map(workout => [email, workout.date, workout.description, workout.teamEvent, workout.organized]);
 
+        const updatedWorkouts = this.state.workouts
+            .filter(workout => workout.status === UPDATED)
+            .map(workout => [email, workout.id, workout.date, workout.description, workout.teamEvent, workout.organized]);
+
+        const unsavedWorkouts = this.state.workouts
+            .filter(workout => workout.status === UNSAVED)
+            .map(workout => [email, workout.id, workout.date, workout.description, workout.teamEvent, workout.organized]);
+
+        // Update modified workouts
+        // TODO: turn this and the following into a batch update that allows you to do multiple ranges at once
+        this.getWorkouts(workouts => {
+            updatedWorkouts.forEach(updatedWorkout => {
+                const index = workouts.findIndex(workout => workout[1] === updatedWorkout[1]);
+
+                console.log('index', index)
+
+                gapi.client.sheets.spreadsheets.values.update({
+                    spreadsheetId: secrets.spreadsheetId,
+                    range: `A${index + 2}`,
+                    valueInputOption: 'USER_ENTERED',
+                    resource: { values: [updatedWorkout] }
+                }).then(response => {
+                    // TODO: toastify
+                    this.updateWorkout(updatedWorkout[1], { status: SAVED });
+                });
+            });
+        });
+
+        // Save unsaved workouts
         gapi.client.sheets.spreadsheets.values.append({
             spreadsheetId: secrets.spreadsheetId,
             range: 'A2',
             valueInputOption: 'USER_ENTERED',
-            resource: { values }
+            resource: { values: unsavedWorkouts }
         }).then(response => {
-            console.log(response);
+            // TODO: toastify
+            unsavedWorkouts.forEach(workout => this.updateWorkout(workout[1], { status: SAVED }));
         });
     }
 
     loadWorkouts = () => {
-        gapi.client.sheets.spreadsheets.values.get({
-            spreadsheetId: secrets.spreadsheetId,
-            range: 'A2:E',
-        }).then(response => {
-            const workouts = response.result.values
+        this.getWorkouts(workouts => {
+            workouts = workouts && workouts
                 .filter(workout => workout[0] === this.state.email)
                 .map(workout => ({
-                    date: new Date(workout[1]),
-                    description: workout[2],    // TODO: Hook up this value
-                    teamEvent: workout[3] === 'TRUE' ? true : false,
-                    organized: workout[4] === 'TRUE' ? true : false,
-                    saved: true
-                })
-                );
+                    id: workout[1],
+                    date: new Date(workout[2]),
+                    description: workout[3],
+                    teamEvent: workout[4] === 'TRUE' ? true : false,
+                    organized: workout[5] === 'TRUE' ? true : false,
+                    status: SAVED
+                }))
+                .sort((first, second) => first.date > second.date ? 1 : -1);
 
-            this.setState({ workouts })
-        }, response => {
-            console.error('Error: ' + response.result.error.message);
+            this.setState({ workouts: workouts || [] });
         });
     }
 
     addWorkout = () => {
         this.setState({
             workouts: [...this.state.workouts, {
+                id: uuid(),
                 date: new Date(),
                 description: "",
                 teamEvent: false,
                 organized: false,
-                saved: false
+                status: UNSAVED
             }]
         });
     }
 
-    updateWorkout = (index, field, event, checked) => {
-        const value = checked ? checked : event.target.value;   // The checkboxes handle onChange callbacks by passing in a specific checked parameter
-
+    updateWorkout = (id, update) => {
         let workouts = this.state.workouts.slice();
-        workouts[index] = { ...workouts[index], [field]: value };
+        let index = workouts.findIndex(workout => workout.id === id);
+
+        workouts[index] = {
+            ...workouts[index],
+            ...update,
+            status: workouts[index].status === SAVED ? UPDATED : UNSAVED
+        };
 
         this.setState({ workouts });
     }

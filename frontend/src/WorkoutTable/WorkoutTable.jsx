@@ -15,8 +15,23 @@ import DateFnsUtils from '@date-io/date-fns';
 
 class WorkoutTable extends React.Component {
 
-    handleDateChange = (index, selectedDate) => {
-        this.props.updateWorkout(index, 'date', null, selectedDate);
+    handleDateChange = (id, selectedDate) => {
+        this.props.updateWorkout(id, { date: selectedDate });
+    }
+
+    handleDescriptionChange = (id, event) => {
+        this.props.updateWorkout(id, { description: event.target.value });
+    }
+
+    handleTeamEventChange = (id, event, checked) => {
+        this.props.updateWorkout(id, { teamEvent: checked });
+    }
+
+    handleOrganizedChange = (id, event, checked) => {
+        let update = { organized: checked }
+        if (checked) update.teamEvent = checked;
+
+        this.props.updateWorkout(id, update);
     }
 
     componentDidUpdate(prevProps) {
@@ -27,8 +42,10 @@ class WorkoutTable extends React.Component {
 
     generateRows = () => {
         return this.props.workouts.map((workout, index) => {
+            const id = workout.id;
+
             return (
-                <TableRow key={`tableRow-${index}`} hover>
+                <TableRow key={`tableRow-${id}`} hover>
                     <TableCell padding="checkbox">
                         <Checkbox />
                     </TableCell>
@@ -36,26 +53,27 @@ class WorkoutTable extends React.Component {
                         <MuiPickersUtilsProvider utils={DateFnsUtils}>
                             <DatePicker
                                 value={workout.date}
-                                onChange={this.handleDateChange.bind(null, index)}
+                                onChange={this.handleDateChange.bind(null, id)}
                             />
                         </MuiPickersUtilsProvider>
                     </TableCell>
                     <TableCell>
                         <TextField
                             id={`description-${index}`}
-                            onChange={this.props.updateWorkout.bind(null, index, 'description')}
+                            value={workout.description}
+                            onChange={this.handleDescriptionChange.bind(null, id)}
                         />
                     </TableCell>
                     <TableCell padding="checkbox">
                         <Checkbox
                             checked={workout.teamEvent}
-                            onChange={this.props.updateWorkout.bind(null, index, 'teamEvent')}
+                            onChange={this.handleTeamEventChange.bind(null, id)}
                         />
                     </TableCell>
                     <TableCell padding="checkbox">
                         <Checkbox
                             checked={workout.organized}
-                            onChange={this.props.updateWorkout.bind(null, index, 'organized')}
+                            onChange={this.handleOrganizedChange.bind(null, id)}
                         />
                     </TableCell>
                     <TableCell>

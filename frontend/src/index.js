@@ -42,11 +42,15 @@ class App extends React.Component {
     }
 
     componentDidMount() {
-        gapi.load('client:auth2', this.initClient);
+        gapi.load('client:auth2:signin2', this.initClient);
     }
 
     initClient = () => {
         gapi.client.init(secrets.gapi).then(() => {
+            gapi.signin2.render('sign-in-button', {
+                scope: secrets.gapi.scope
+            });
+
             const auth = gapi.auth2.getAuthInstance();
             auth.isSignedIn.listen(this.updateSigninStatus);
             this.setState({ auth }, this.updateSigninStatus.bind(null, auth.isSignedIn.get()));
@@ -157,7 +161,7 @@ class App extends React.Component {
     }
 
     loadWorkouts = () => {
-        this.getWorkouts(workouts => {
+        this.state.email && this.getWorkouts(workouts => {
             workouts = workouts && workouts
                 .filter(workout => workout[0] === this.state.email)
                 .map(workout => ({
@@ -244,6 +248,7 @@ class App extends React.Component {
 
         return (
             <React.Fragment>
+                <div id="sign-in-button"></div>
                 <div className='grid-container'>
                     <h1 className='title'> Axercise </h1>
                     <WorkoutProgress className='progress-bar-left' label='Monthly Progress' progress={monthProgress} />

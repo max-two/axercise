@@ -172,3 +172,13 @@ body {
 .icon {
     margin-left: 0.5rem;
 }
+
+.logo {
+    vertical-align: middle;
+    margin-right: 1.5rem;
+    width: 3.2rem;
+  }
+
+  .title-text {
+      vertical-align: middle;
+  }

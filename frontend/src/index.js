@@ -11,6 +11,7 @@ import WorkoutProgress from './WorkoutProgress';
 import WorkoutTable from './WorkoutTable';
 
 import secrets from '../secrets.json';
+import logo from './logo.png';
 
 const UNSAVED = "unsaved";
 const SAVED = "saved";
@@ -263,7 +264,12 @@ class App extends React.Component {
 
         return (
             <div className='grid-container'>
-                <div className='title'> Axercise </div>
+                <div className='title'>
+                    <div style={{ verticalAlign: 'center' }}>
+                        <img className='logo' src={logo} />
+                        <span className='title-text'>Axercise</span>
+                    </div>
+                </div>
                 <div className='progress-bars'>
                     <div id='sign-in-button' className='sign-in'></div>
                     <WorkoutProgress className='progress-bar-left' label='Monthly Progress' progress={monthProgress} />

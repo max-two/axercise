@@ -262,32 +262,32 @@ class App extends React.Component {
         const yearProgress = this.calcYearProgress();
 
         return (
-            <React.Fragment>
-                <div id="sign-in-button"></div>
-                <div className='grid-container'>
-                    <Typography variant='h2' className='title'> Axercise </Typography>
+            <div className='grid-container'>
+                <div className='title'> Axercise </div>
+                <div className='progress-bars'>
+                    <div id='sign-in-button' className='sign-in'></div>
                     <WorkoutProgress className='progress-bar-left' label='Monthly Progress' progress={monthProgress} />
                     <WorkoutProgress className='progress-bar-right' label='Yearly Progress' progress={yearProgress} />
-                    <div className='workout-table'>
-                        <WorkoutTable 
-                            workouts={this.state.workouts} 
-                            selected={this.state.selected} 
-                            updateWorkout={this.updateWorkout} 
-                            updateSelected={this.updateSelected} 
-                            handleSelectAll={this.handleSelectAll} 
-                            calcPoints={this.calcPoints} 
-                        />
-                    </div>
                 </div>
-                <span className='buttons'>
+                <div className='workout-table'>
+                    <WorkoutTable
+                        workouts={this.state.workouts}
+                        selected={this.state.selected}
+                        updateWorkout={this.updateWorkout}
+                        updateSelected={this.updateSelected}
+                        handleSelectAll={this.handleSelectAll}
+                        calcPoints={this.calcPoints}
+                    />
+                </div>
+                <div className='buttons'>
                     <Button className='button' color='primary' variant='contained' onClick={this.addWorkout}>
                         Add Workout<Add className='icon' />
                     </Button>
                     <Button className='button' color='secondary' variant='contained' onClick={this.saveWorkouts}>
                         Save Workouts<LockOutlined className='icon' />
                     </Button>
-                </span>
-            </React.Fragment>
+                </div>
+            </div>
         )
     }
 }

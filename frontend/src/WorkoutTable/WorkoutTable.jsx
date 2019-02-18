@@ -55,102 +55,94 @@ class WorkoutTable extends React.Component {
     generateRows = () => {
         return this.props.workouts.map((workout, index) => {
             const id = workout.id;
+            const isSelected = this.props.selected.includes(id);
 
             return (
-                <TableRow key={`tableRow-${id}`} hover>
-                    <TableCell padding="checkbox">
+                <div className={`table-row ${isSelected && 'table-row-selected'}`} key={`tableRow-${id}`} hover>
+                    <div className='table-cell' padding="checkbox">
                         <Checkbox
-                            checked={this.props.selected.includes(id)}
+                            color='primary'
+                            checked={isSelected}
                             onChange={this.handleSelect.bind(null, id)}
                         />
-                    </TableCell>
-                    <TableCell>
+                    </div>
+                    <div className='table-cell'>
                         <MuiPickersUtilsProvider utils={DateFnsUtils}>
                             <DatePicker
                                 value={workout.date}
                                 onChange={this.handleDateChange.bind(null, id)}
                             />
                         </MuiPickersUtilsProvider>
-                    </TableCell>
-                    <TableCell>
+                    </div>
+                    <div className='table-cell description'>
                         <TextField
                             id={`description-${index}`}
+                            className='description-field'
                             value={workout.description}
                             onChange={this.handleDescriptionChange.bind(null, id)}
                         />
-                    </TableCell>
-                    <TableCell padding="checkbox">
+                    </div>
+                    <div className='table-cell' padding="checkbox">
                         <Checkbox
                             checked={workout.teamEvent}
                             onChange={this.handleTeamEventChange.bind(null, id)}
                         />
-                    </TableCell>
-                    <TableCell padding="checkbox">
+                    </div>
+                    <div className='table-cell' padding="checkbox">
                         <Checkbox
                             checked={workout.organized}
                             onChange={this.handleOrganizedChange.bind(null, id)}
                         />
-                    </TableCell>
-                    <TableCell>
+                    </div>
+                    <div className='table-cell'>
                         {this.props.calcPoints(workout)}
-                    </TableCell>
-                </TableRow>
+                    </div>
+                </div>
             );
         })
     }
 
     render() {
         const numSelected = this.props.selected.length;
+        const anySelected = numSelected > 0;
 
         return (
-            <React.Fragment>
-                <Toolbar>
-                    <div className="table-title">
-                        {numSelected > 0 ? (
-                            <Typography variant="subtitle1">
-                                {numSelected} selected
-                            </Typography>
-                        ) : (
-                                <Typography variant="h5" className="table-title">
-                                    Workouts
-                            </Typography>
-                            )}
+            <div className='table'>
+                <div className={`table-tool-bar ${anySelected && 'selected-active'}`}>
+                    <div className={`table-title ${anySelected && 'selected-active-text'}`}>
+                        {anySelected ? `${numSelected} selected` : 'Workouts'}
                     </div>
-                    <div className="spacer"></div>
-                    <div>
-                        {numSelected > 0 ? (
-                            <Tooltip title="Delete">
-                                <IconButton aria-label="Delete">
-                                    <DeleteIcon />
-                                </IconButton>
-                            </Tooltip>
-                        ) : (
-                                <Tooltip title="Filter list">
-                                    <IconButton aria-label="Filter list">
-                                        <FilterListIcon />
+                    <div className='table-action'>
+                        {
+                            anySelected ? (
+                                <Tooltip title='Delete'>
+                                    <IconButton>
+                                        <DeleteIcon />
                                     </IconButton>
                                 </Tooltip>
-                            )}
+                            ) : (
+                                    <Tooltip title='Filter list'>
+                                        <IconButton>
+                                            <FilterListIcon />
+                                        </IconButton>
+                                    </Tooltip>
+                                )}
                     </div>
-                </Toolbar>
-                <Table>
-                    <TableHead>
-                        <TableRow>
-                            <TableCell padding="checkbox">
-                                <Checkbox onChange={this.props.handleSelectAll} />
-                            </TableCell>
-                            <TableCell> Date </TableCell>
-                            <TableCell> Description </TableCell>
-                            <TableCell> Team Event </TableCell>
-                            <TableCell> Organized </TableCell>
-                            <TableCell> Points </TableCell>
-                        </TableRow>
-                    </TableHead>
-                    <TableBody className='table-body'>
-                        {this.generateRows()}
-                    </TableBody>
-                </Table>
-            </React.Fragment>
+                </div>
+                <div className='table-head'>
+                    <div className='table-header' padding='checkbox'>
+                        <Checkbox color='primary' onChange={this.props.handleSelectAll} />
+                    </div>
+                    <div className='table-header'> Date </div>
+                    <div className='table-header'> Description </div>
+                    <div className='table-header'> Team Event </div>
+                    <div className='table-header'> Organized </div>
+                    <div className='table-header'> Points </div>
+                </div>
+                <div className='table-body'>
+                    {this.generateRows()}
+                </div>
+            </div>
         )
     }
 }

@@ -1,16 +1,130 @@
+html, body, #app, .grid-container, .table {
+    height: 100%;
+    margin: 0;
+}
+
+body {
+    font-family: "Roboto", "Helvetica", "Arial", sans-serif;
+    background-color: #e7ecf1;
+}
+
+.table {
+    display: grid;
+    grid-template-rows: 1fr 1fr 9fr;
+}
+
+.table-tool-bar {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+}
+
+.selected-active {
+    background-color: #b3ccfa;
+}
+
+.table-title {
+    grid-column: auto;
+    margin: 1rem;
+    font-size: 1.75rem;
+    font-weight: 600;
+    line-height: 1.5;
+    color: #242424;
+}
+
+.selected-active-text {
+    color:  #004bad;
+    font-weight: 500;
+    font-size: 1.3rem;
+    line-height: 2.019;
+}
+
+.table-action {
+    grid-column: 3 / 4;
+    justify-self: end;
+    align-self: center;
+}
+
+.table-head {
+    display: grid;
+    grid-template-columns: 1fr 3fr 6fr 2fr 2fr 1fr;
+    place-items: center;
+    border-bottom: 1px solid #c7c7c7;
+    box-shadow: 0px 5px 7px #c9c9c9;
+}
+
+.table-header {
+    grid-column: auto;
+    color: #636262;
+}
+
+.table-body {
+    overflow-y: scroll;     /* for firefox support */
+    overflow-y: overlay;
+}
+
+.table-row {
+    display: grid;
+    grid-template-columns: 1fr 3fr 6fr 2fr 2fr 1fr;
+    place-items: center;
+    border-bottom: 1px solid #d3d3d3;
+}
+
+.table-row-selected {
+    background-color: #d9e4fa;
+}
+
+.table-row:hover, .table-row-selected:hover {
+    background-color: #c7dbff;
+}
+
+.table-cell {
+    grid-column: auto;
+}
+
+.description {
+    justify-self: stretch;
+}
+
+.description-field {
+    width: 100%;
+}
+
 .grid-container {
     display: grid;
     grid-template-areas: 
         'title title'
-        'progress-bar-left progress-bar-right'
+        'progress-bars progress-bars'
         'workout-table workout-table'
+        'buttons buttons'
     ;
+    grid-template-rows: 1fr 2fr minmax(0, 9fr) 1fr;
     justify-items: center;
-    row-gap: 40px;
 }
 
 .title {
     grid-area: title;
+    justify-self: stretch;
+    text-align: center;
+    color: #e0e0e0;
+    font-size: 3.75rem;
+    font-weight: 400;
+    text-shadow: 1px 1px #000000;
+    box-shadow: 0px 5px 10px #2e2e2e;
+    background-color: #003c8f;
+}
+
+.progress-bars {
+    grid-area: progress-bars;
+    display: grid;
+    grid-template-areas: 'progress-bar-left progress-bar-right';
+    justify-self: stretch;
+    position: relative;
+}
+
+.progress-bar-left, .progress-bar-right {
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+    color: #242424;
 }
 
 .progress-bar-left {
@@ -27,39 +141,34 @@
 
 .workout-table {
     grid-area: workout-table;
-    width: 100%;
-    height: 400px;
-    border-top: 1px solid #e0e0e0;
-    border-bottom: 1px solid #e0e0e0;
+    justify-self: stretch;
+    border-top: 1px solid #adadad;
+    border-bottom: 1px solid #adadad;
+    box-shadow: 0px -5px 7px #c9c9c9 inset;
 }
 
 .buttons {
-    float: right;
+    grid-area: buttons;
+    justify-self: end;
+    margin-top: 1.5rem;
+    margin-bottom: 1rem;
 }
 
 .buttons .button {
-    margin-top: 3em;
     margin-left: 1rem;
     margin-right: 1rem;
 }
 
-/* TODO: Move this to workout progress css */
 .progressLabel {
     text-align: center;
 }
 
+.sign-in {
+    position: absolute;
+    top: 20px;
+    right: 10px;
+}
+
 .icon {
     margin-left: 0.5rem;
-}
-
-.table-title {
-    flex: 0 0 auto;
-}
-
-.table-body-wrapper {
-    overflow: hidden;
-}
-
-.spacer {
-    flex: 1 1 100%;
 }

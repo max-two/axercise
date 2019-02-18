@@ -5,7 +5,6 @@ import uuid from 'uuid/v1';
 
 import Button from '@material-ui/core/Button';
 import { Add, LockOutlined } from '@material-ui/icons';
-import Typography from '@material-ui/core/Typography';
 
 import WorkoutProgress from './WorkoutProgress';
 import WorkoutTable from './WorkoutTable';
@@ -46,6 +45,16 @@ class App extends React.Component {
 
     componentDidMount() {
         gapi.load('client:auth2:signin2', this.initClient);
+
+        window.addEventListener('beforeunload', e => {
+            if (this.state.workouts.reduce((acc, workout) => acc || workout.status !== SAVED, false)) {
+                e = e || window.event;
+                // Cancel the event
+                e.preventDefault();
+                // Chrome requires returnValue to be set
+                e.returnValue = '';
+            }
+        });
     }
 
     initClient = () => {

@@ -45,19 +45,6 @@ class App extends React.Component {
 
     componentDidMount() {
         gapi.load('client:auth2:signin2', this.initClient);
-
-        window.addEventListener('beforeunload', e => {
-            e = e || window.event;
-
-            if (this.state.workouts.reduce((acc, workout) => acc || workout.status !== SAVED, false)) {
-                // Cancel the event
-                e.preventDefault();
-                // Chrome requires returnValue to be set
-                e.returnValue = '';
-            } else {
-                e.returnValue = undefined;
-            }
-        });
     }
 
     initClient = () => {
@@ -73,6 +60,14 @@ class App extends React.Component {
         }, error => {
             console.error(JSON.stringify(error, null, 2));
         });
+    }
+
+    beforeUnload = e => {
+        e = e || window.event;
+        // Cancel the event
+        e.preventDefault();
+        // Chrome requires returnValue to be set
+        e.returnValue = '';
     }
 
     updateSigninStatus = isSignedIn => {
@@ -194,6 +189,8 @@ class App extends React.Component {
     }
 
     addWorkout = () => {
+        window.onbeforeunload = this.beforeUnload;
+
         this.setState({
             workouts: [...this.state.workouts, {
                 id: uuid(),
@@ -215,6 +212,10 @@ class App extends React.Component {
             status: workouts[index].status === UNSAVED ? UNSAVED : UPDATED,
             ...update
         };
+
+        workouts.reduce((acc, workout) => acc || workout.status !== SAVED, false) ?
+            window.onbeforeunload = this.beforeUnload :
+            window.onbeforeunload = undefined;
 
         this.setState({ workouts });
     }

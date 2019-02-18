@@ -5,6 +5,7 @@ import uuid from 'uuid/v1';
 
 import Button from '@material-ui/core/Button';
 import { Add, LockOutlined } from '@material-ui/icons';
+import Typography from '@material-ui/core/Typography';
 
 import WorkoutProgress from './WorkoutProgress';
 import WorkoutTable from './WorkoutTable';
@@ -37,6 +38,7 @@ class App extends React.Component {
     state = {
         selectedDate: new Date(),
         workouts: [],
+        selected: [],
         auth: {},
         email: ''
     }
@@ -204,6 +206,19 @@ class App extends React.Component {
         this.setState({ workouts });
     }
 
+    updateSelected = (id, checked) => {
+        if (checked) {
+            this.setState({ selected: [...this.state.selected, id] });
+        } else {
+            this.setState({ selected: this.state.selected.filter(selectedId => selectedId !== id) })
+        }
+    }
+
+    handleSelectAll = (event, checked) => {
+        const selected = checked ? this.state.workouts.map(workout => workout.id) : [];
+        this.setState({ selected });
+    }
+
     getMonth = () => {
         const date = new Date();
         return this.months[date.getMonth()];
@@ -250,11 +265,18 @@ class App extends React.Component {
             <React.Fragment>
                 <div id="sign-in-button"></div>
                 <div className='grid-container'>
-                    <h1 className='title'> Axercise </h1>
+                    <Typography variant='h2' className='title'> Axercise </Typography>
                     <WorkoutProgress className='progress-bar-left' label='Monthly Progress' progress={monthProgress} />
                     <WorkoutProgress className='progress-bar-right' label='Yearly Progress' progress={yearProgress} />
                     <div className='workout-table'>
-                        <WorkoutTable workouts={this.state.workouts} updateWorkout={this.updateWorkout} calcPoints={this.calcPoints} />
+                        <WorkoutTable 
+                            workouts={this.state.workouts} 
+                            selected={this.state.selected} 
+                            updateWorkout={this.updateWorkout} 
+                            updateSelected={this.updateSelected} 
+                            handleSelectAll={this.handleSelectAll} 
+                            calcPoints={this.calcPoints} 
+                        />
                     </div>
                 </div>
                 <span className='buttons'>

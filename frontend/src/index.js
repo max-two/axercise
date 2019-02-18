@@ -47,12 +47,15 @@ class App extends React.Component {
         gapi.load('client:auth2:signin2', this.initClient);
 
         window.addEventListener('beforeunload', e => {
+            e = e || window.event;
+
             if (this.state.workouts.reduce((acc, workout) => acc || workout.status !== SAVED, false)) {
-                e = e || window.event;
                 // Cancel the event
                 e.preventDefault();
                 // Chrome requires returnValue to be set
                 e.returnValue = '';
+            } else {
+                e.returnValue = undefined;
             }
         });
     }
@@ -209,8 +212,8 @@ class App extends React.Component {
 
         workouts[index] = {
             ...workouts[index],
-            ...update,
-            status: workouts[index].status === UNSAVED ? UNSAVED : UPDATED
+            status: workouts[index].status === UNSAVED ? UNSAVED : UPDATED,
+            ...update
         };
 
         this.setState({ workouts });

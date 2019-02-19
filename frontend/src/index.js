@@ -59,7 +59,7 @@ class App extends React.Component {
             this.setState({ auth }, this.updateSigninStatus.bind(null, auth.isSignedIn.get()));
             this.loadWorkouts();
         }, error => {
-            console.error(JSON.stringify(error, null, 2));
+            toast(JSON.stringify(error, null, 2));
         });
     }
 
@@ -87,30 +87,16 @@ class App extends React.Component {
         this.state.auth.signOut();
     }
 
-    getWorkouts = cb => {
-        gapi.client.sheets.spreadsheets.values.get({
-            spreadsheetId: secrets.spreadsheetId,
-            range: `${this.getMonth()}!A2:F`,
-        }).then(response => {
-            cb(response.result.values);
-        }, response => {
-            console.error('Error: ' + response.result.error.message);
-        });
-    }
-
-    // TODO: change sheet to be yearly instead of monthly
-    // TODO: validation/required fields
-    saveWorkouts = () => {
-        // Check for this month's sheet
+    checkSheet = cb => {
         gapi.client.sheets.spreadsheets.get({ spreadsheetId: secrets.spreadsheetId }).then(response => {
             const sheets = response.result.sheets;
-            const month = this.getMonth();
+            const year = this.getYear();
 
-            const sheetExists = sheets.map(sheet => sheet.properties.title).includes(month);
+            const sheetExists = sheets.map(sheet => sheet.properties.title).includes(year);
 
             // TODO: this block of logic could be way cleaner with async/await
             if (sheetExists) {
-                this.writeWorkouts();
+                cb();
             } else {
                 gapi.client.sheets.spreadsheets.batchUpdate({
                     spreadsheetId: secrets.spreadsheetId
@@ -118,57 +104,73 @@ class App extends React.Component {
                         requests: [
                             {
                                 addSheet: {
-                                    properties: { title: month }    // TODO: create the headers
+                                    properties: { title: year }    // TODO: create the headers
                                 }
                             }
                         ]
                     }
                 ).then(response => {
-                    this.writeWorkouts();
+                    cb();
                 });
             }
         });
     }
 
-    writeWorkouts = () => {
-        const email = this.state.email;
-        const month = this.getMonth();
-
-        const updatedWorkouts = this.state.workouts
-            .filter(workout => workout.status === UPDATED)
-            .map(workout => [email, workout.id, workout.date, workout.description, workout.teamEvent, workout.organized]);
-
-        const unsavedWorkouts = this.state.workouts
-            .filter(workout => workout.status === UNSAVED)
-            .map(workout => [email, workout.id, workout.date, workout.description, workout.teamEvent, workout.organized]);
-
-        // Update modified workouts
-        // TODO: turn this and the following into a batch update that allows you to do multiple ranges at once
-        this.getWorkouts(workouts => {
-            updatedWorkouts.forEach(updatedWorkout => {
-                const index = workouts.findIndex(workout => workout[1] === updatedWorkout[1]);
-
-                gapi.client.sheets.spreadsheets.values.update({
-                    spreadsheetId: secrets.spreadsheetId,
-                    range: `${month}!A${index + 2}`,
-                    valueInputOption: 'USER_ENTERED',
-                    resource: { values: [updatedWorkout] }
-                }).then(response => {
-                    toast.success("Updated workout saved");
-                    this.updateWorkout(updatedWorkout[1], { status: SAVED });
-                });
+    getWorkouts = cb => {
+        this.checkSheet(() => {
+            gapi.client.sheets.spreadsheets.values.get({
+                spreadsheetId: secrets.spreadsheetId,
+                range: `${this.getYear()}!A2:F`,
+            }).then(response => {
+                cb(response.result.values);
+            }, response => {
+                toast('Error: ' + response.result.error.message);
             });
         });
+    }
 
-        // Save unsaved workouts
-        unsavedWorkouts.length > 0 && gapi.client.sheets.spreadsheets.values.append({
-            spreadsheetId: secrets.spreadsheetId,
-            range: `${month}!A2`,
-            valueInputOption: 'USER_ENTERED',
-            resource: { values: unsavedWorkouts }
-        }).then(response => {
-            toast.success("New workouts saved");
-            unsavedWorkouts.forEach(workout => this.updateWorkout(workout[1], { status: SAVED }));
+    // TODO: validation/required fields
+    saveWorkouts = () => {
+        this.checkSheet(() => {
+            const email = this.state.email;
+            const year = this.getYear();
+
+            const updatedWorkouts = this.state.workouts
+                .filter(workout => workout.status === UPDATED)
+                .map(workout => [email, workout.id, workout.date, workout.description, workout.teamEvent, workout.organized]);
+
+            const unsavedWorkouts = this.state.workouts
+                .filter(workout => workout.status === UNSAVED)
+                .map(workout => [email, workout.id, workout.date, workout.description, workout.teamEvent, workout.organized]);
+
+            // Update modified workouts
+            // TODO: turn this and the following into a batch update that allows you to do multiple ranges at once
+            this.getWorkouts(workouts => {
+                updatedWorkouts.forEach(updatedWorkout => {
+                    const index = workouts.findIndex(workout => workout[1] === updatedWorkout[1]);
+
+                    gapi.client.sheets.spreadsheets.values.update({
+                        spreadsheetId: secrets.spreadsheetId,
+                        range: `${year}!A${index + 2}`,
+                        valueInputOption: 'USER_ENTERED',
+                        resource: { values: [updatedWorkout] }
+                    }).then(response => {
+                        toast.success("Workout updates saved");
+                        this.updateWorkout(updatedWorkout[1], { status: SAVED });
+                    });
+                });
+            });
+
+            // Save unsaved workouts
+            unsavedWorkouts.length > 0 && gapi.client.sheets.spreadsheets.values.append({
+                spreadsheetId: secrets.spreadsheetId,
+                range: `${year}!A2`,
+                valueInputOption: 'USER_ENTERED',
+                resource: { values: unsavedWorkouts }
+            }).then(response => {
+                toast.success("New workouts saved");
+                unsavedWorkouts.forEach(workout => this.updateWorkout(workout[1], { status: SAVED }));
+            })
         });
     }
 
@@ -238,6 +240,12 @@ class App extends React.Component {
     getMonth = () => {
         const date = new Date();
         return this.months[date.getMonth()];
+    }
+
+    getYear = () => {
+        const date = new Date();
+        console.log(date.getYear())
+        return (date.getYear() + 1900).toString();
     }
 
     calcPoints = workout => {

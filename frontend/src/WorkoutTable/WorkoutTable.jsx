@@ -39,12 +39,6 @@ class WorkoutTable extends React.Component {
         this.props.updateWorkout(id, update);
     }
 
-    componentDidUpdate(prevProps) {
-        if (this.props.workouts.length > prevProps.workouts.length) {
-            document.getElementById(`description-${this.props.workouts.length - 1}`).focus();
-        }
-    }
-
     generateRows = () => {
         return this.props.workouts.map((workout, index) => {
             const id = workout.id;
@@ -73,6 +67,7 @@ class WorkoutTable extends React.Component {
                             className='description-field'
                             value={workout.description}
                             onChange={this.handleDescriptionChange.bind(null, id)}
+                            autoFocus={workout.status === 'unsaved'}
                         />
                     </div>
                     <div className='table-cell' padding="checkbox">
@@ -137,7 +132,11 @@ class WorkoutTable extends React.Component {
                     <div className='table-header'> Points </div>
                 </div>
                 <div className='table-body'>
-                    {this.generateRows()}
+                    {
+                        this.props.workouts.length
+                            ? this.generateRows()
+                            : <div className='empty-table-text'> No workouts added yet, add your first using the button below </div>
+                    }
                 </div>
             </div>
         )

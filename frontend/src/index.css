@@ -183,6 +183,12 @@ body {
     vertical-align: middle;
 }
 
+.empty-table-text {
+    color: #636262;
+    margin-top: 2rem;
+    text-align: center;
+}
+
 .toast {
     background: #f50057 !important;
     border-radius: 10px !important;

@@ -20,6 +20,7 @@
     "react": "^16.7.0",
     "react-dom": "^16.7.0",
     "react-sweet-progress": "^1.1.2",
+    "react-toastify": "^4.5.2",
     "uuid": "^3.3.2"
   },
   "devDependencies": {

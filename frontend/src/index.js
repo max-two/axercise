@@ -2,7 +2,8 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 
 import uuid from 'uuid/v1';
-
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.min.css';
 import Button from '@material-ui/core/Button';
 import { Add, LockOutlined } from '@material-ui/icons';
 
@@ -97,6 +98,7 @@ class App extends React.Component {
         });
     }
 
+    // TODO: change sheet to be yearly instead of monthly
     // TODO: validation/required fields
     saveWorkouts = () => {
         // Check for this month's sheet
@@ -152,7 +154,7 @@ class App extends React.Component {
                     valueInputOption: 'USER_ENTERED',
                     resource: { values: [updatedWorkout] }
                 }).then(response => {
-                    // TODO: toastify
+                    toast.success("Updated workout saved");
                     this.updateWorkout(updatedWorkout[1], { status: SAVED });
                 });
             });
@@ -165,7 +167,7 @@ class App extends React.Component {
             valueInputOption: 'USER_ENTERED',
             resource: { values: unsavedWorkouts }
         }).then(response => {
-            // TODO: toastify
+            toast.success("New workouts saved");
             unsavedWorkouts.forEach(workout => this.updateWorkout(workout[1], { status: SAVED }));
         });
     }
@@ -276,37 +278,43 @@ class App extends React.Component {
         const yearProgress = this.calcYearProgress();
 
         return (
-            <div className='grid-container'>
-                <div className='title'>
-                    <div style={{ verticalAlign: 'center' }}>
-                        <img className='logo' src={logo} />
-                        <span className='title-text'>Axercise</span>
+            <React.Fragment>
+                <ToastContainer
+                    position={toast.POSITION.TOP_LEFT}
+                    toastClassName='toast'
+                />
+                <div className='grid-container'>
+                    <div className='title'>
+                        <div style={{ verticalAlign: 'center' }}>
+                            <img className='logo' src={logo} />
+                            <span className='title-text'>Axercise</span>
+                        </div>
+                    </div>
+                    <div className='progress-bars'>
+                        <div id='sign-in-button' className='sign-in'></div>
+                        <WorkoutProgress className='progress-bar-left' label='Monthly Progress' progress={monthProgress} />
+                        <WorkoutProgress className='progress-bar-right' label='Yearly Progress' progress={yearProgress} />
+                    </div>
+                    <div className='workout-table'>
+                        <WorkoutTable
+                            workouts={this.state.workouts}
+                            selected={this.state.selected}
+                            updateWorkout={this.updateWorkout}
+                            updateSelected={this.updateSelected}
+                            handleSelectAll={this.handleSelectAll}
+                            calcPoints={this.calcPoints}
+                        />
+                    </div>
+                    <div className='buttons'>
+                        <Button className='button' color='primary' variant='contained' onClick={this.addWorkout}>
+                            Add Workout<Add className='icon' />
+                        </Button>
+                        <Button className='button' color='secondary' variant='contained' onClick={this.saveWorkouts}>
+                            Save Workouts<LockOutlined className='icon' />
+                        </Button>
                     </div>
                 </div>
-                <div className='progress-bars'>
-                    <div id='sign-in-button' className='sign-in'></div>
-                    <WorkoutProgress className='progress-bar-left' label='Monthly Progress' progress={monthProgress} />
-                    <WorkoutProgress className='progress-bar-right' label='Yearly Progress' progress={yearProgress} />
-                </div>
-                <div className='workout-table'>
-                    <WorkoutTable
-                        workouts={this.state.workouts}
-                        selected={this.state.selected}
-                        updateWorkout={this.updateWorkout}
-                        updateSelected={this.updateSelected}
-                        handleSelectAll={this.handleSelectAll}
-                        calcPoints={this.calcPoints}
-                    />
-                </div>
-                <div className='buttons'>
-                    <Button className='button' color='primary' variant='contained' onClick={this.addWorkout}>
-                        Add Workout<Add className='icon' />
-                    </Button>
-                    <Button className='button' color='secondary' variant='contained' onClick={this.saveWorkouts}>
-                        Save Workouts<LockOutlined className='icon' />
-                    </Button>
-                </div>
-            </div>
+            </React.Fragment>
         )
     }
 }

@@ -109,7 +109,7 @@ class WorkoutTable extends React.Component {
                         {
                             anySelected ? (
                                 <Tooltip title='Delete'>
-                                    <IconButton>
+                                    <IconButton onClick={this.props.deleteWorkout}>
                                         <DeleteIcon />
                                     </IconButton>
                                 </Tooltip>
@@ -124,7 +124,11 @@ class WorkoutTable extends React.Component {
                 </div>
                 <div className='table-head'>
                     <div className='table-header' padding='checkbox'>
-                        <Checkbox color='primary' onChange={this.props.handleSelectAll} />
+                        <Checkbox
+                            color='primary'
+                            checked={anySelected && numSelected === this.props.workouts.length}
+                            onChange={this.props.handleSelectAll}
+                        />
                     </div>
                     <div className='table-header'> Date </div>
                     <div className='table-header'> Description </div>

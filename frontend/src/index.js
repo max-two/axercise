@@ -21,21 +21,6 @@ class App extends React.Component {
     monthlyPoints = 12;
     yearlyPoints = 160;
 
-    months = [
-        'January',
-        'February',
-        'March',
-        'April',
-        'May',
-        'June',
-        'July',
-        'August',
-        'September',
-        'October',
-        'November',
-        'December'
-    ];
-
     state = {
         selectedDate: new Date(),
         workouts: [],
@@ -69,6 +54,12 @@ class App extends React.Component {
         e.preventDefault();
         // Chrome requires returnValue to be set
         e.returnValue = '';
+    }
+
+    updateBeforeUnload = workouts => {
+        workouts.reduce((acc, workout) => acc || workout.status !== SAVED, false) ?
+            window.onbeforeunload = this.beforeUnload :
+            window.onbeforeunload = undefined;
     }
 
     updateSigninStatus = isSignedIn => {
@@ -120,7 +111,7 @@ class App extends React.Component {
         this.checkSheet(() => {
             gapi.client.sheets.spreadsheets.values.get({
                 spreadsheetId: secrets.spreadsheetId,
-                range: `${this.getYear()}!A2:F`,
+                range: `${this.getYear()}!A2:G`,
             }).then(response => {
                 cb(response.result.values);
             }, response => {
@@ -137,11 +128,11 @@ class App extends React.Component {
 
             const updatedWorkouts = this.state.workouts
                 .filter(workout => workout.status === UPDATED)
-                .map(workout => [email, workout.id, workout.date, workout.description, workout.teamEvent, workout.organized]);
+                .map(workout => [email, workout.id, workout.date, workout.description, workout.teamEvent, workout.organized, false]);
 
             const unsavedWorkouts = this.state.workouts
                 .filter(workout => workout.status === UNSAVED)
-                .map(workout => [email, workout.id, workout.date, workout.description, workout.teamEvent, workout.organized]);
+                .map(workout => [email, workout.id, workout.date, workout.description, workout.teamEvent, workout.organized, false]);
 
             // Update modified workouts
             // TODO: turn this and the following into a batch update that allows you to do multiple ranges at once
@@ -177,8 +168,9 @@ class App extends React.Component {
     loadWorkouts = () => {
         this.state.email && this.getWorkouts(workouts => {
             workouts = workouts && workouts
-                .filter(workout => workout[0] === this.state.email)
-                .map(workout => ({
+                .filter(workout => workout[6] === 'FALSE')              // Filter out any deleted workouts
+                .filter(workout => workout[0] === this.state.email)     // Filter for this users workouts
+                .map(workout => ({                                      // Generate workout objects
                     id: workout[1],
                     date: new Date(workout[2]),
                     description: workout[3],
@@ -186,7 +178,7 @@ class App extends React.Component {
                     organized: workout[5] === 'TRUE' ? true : false,
                     status: SAVED
                 }))
-                .sort((first, second) => first.date > second.date ? 1 : -1);
+                .sort((first, second) => first.date > second.date ? 1 : -1);    // Sort in descending order
 
             this.setState({ workouts: workouts || [] });
         });
@@ -217,11 +209,42 @@ class App extends React.Component {
             ...update
         };
 
-        workouts.reduce((acc, workout) => acc || workout.status !== SAVED, false) ?
-            window.onbeforeunload = this.beforeUnload :
-            window.onbeforeunload = undefined;
+        this.updateBeforeUnload(workouts);
 
         this.setState({ workouts });
+    }
+
+    deleteWorkout = () => {
+        const savedIds = this.state.selected.filter(id => {
+            const workout = this.state.workouts.find(workout => workout.id === id);
+            return workout && workout.status !== UNSAVED;
+        });
+
+        const workouts = this.state.workouts.filter(workout => !this.state.selected.includes(workout.id));
+        this.updateBeforeUnload(workouts);
+
+        this.setState({
+            workouts,
+            selected: this.state.selected.filter(id => !this.state.selected.includes(id))
+        });
+
+        savedIds.length && this.getWorkouts(workouts => {
+            const year = this.getYear();
+
+            savedIds.forEach(id => {
+                const index = workouts.findIndex(workout => workout[1] === id);
+                const values = [[...workouts[index].slice(0, 6), true]];
+
+                gapi.client.sheets.spreadsheets.values.update({
+                    spreadsheetId: secrets.spreadsheetId,
+                    range: `${year}!A${index + 2}`,
+                    valueInputOption: 'USER_ENTERED',
+                    resource: { values }
+                }).then(response => {
+                    toast.success("Workout deleted");
+                })
+            });
+        });
     }
 
     updateSelected = (id, checked) => {
@@ -237,14 +260,8 @@ class App extends React.Component {
         this.setState({ selected });
     }
 
-    getMonth = () => {
-        const date = new Date();
-        return this.months[date.getMonth()];
-    }
-
     getYear = () => {
         const date = new Date();
-        console.log(date.getYear())
         return (date.getYear() + 1900).toString();
     }
 
@@ -307,6 +324,7 @@ class App extends React.Component {
                         <WorkoutTable
                             workouts={this.state.workouts}
                             selected={this.state.selected}
+                            deleteWorkout={this.deleteWorkout}
                             updateWorkout={this.updateWorkout}
                             updateSelected={this.updateSelected}
                             handleSelectAll={this.handleSelectAll}

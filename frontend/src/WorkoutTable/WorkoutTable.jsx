@@ -148,13 +148,21 @@ class WorkoutTable extends React.Component {
                     <div className='table-action'>
                         {
                             anySelected ? (
-                                <Tooltip title='Delete'>
+                                <Tooltip
+                                    title='Delete'
+                                    placement='left'
+                                    enterDelay='500'
+                                >
                                     <IconButton onClick={this.props.deleteWorkout}>
                                         <DeleteIcon />
                                     </IconButton>
                                 </Tooltip>
                             ) : (
-                                    <Tooltip title='Filter list'>
+                                    <Tooltip
+                                        title='Filter'
+                                        placement='left'
+                                        enterDelay='500'
+                                    >
                                         <IconButton onClick={this.handleFilterOpen}>
                                             <FilterListIcon />
                                         </IconButton>

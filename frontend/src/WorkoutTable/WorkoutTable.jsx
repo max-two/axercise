@@ -6,19 +6,50 @@ import Tooltip from '@material-ui/core/Tooltip';
 import DeleteIcon from '@material-ui/icons/Delete';
 import FilterListIcon from '@material-ui/icons/FilterList';
 import IconButton from '@material-ui/core/IconButton';
+import Menu from '@material-ui/core/Menu';
+import MenuItem from '@material-ui/core/MenuItem';
+import { toast } from 'react-toastify';
+
 
 import { MuiPickersUtilsProvider, DatePicker } from 'material-ui-pickers';
 import DateFnsUtils from '@date-io/date-fns';
 
 
 class WorkoutTable extends React.Component {
+    filterOptions = [
+        'This Month',
+        'This Year',
+        'All Time'
+    ];
+
+    filters = {
+        0: workout => {
+            const date = new Date();
+            return workout.date.getMonth() === date.getMonth();
+        },
+        1: workout => {
+            const date = new Date();
+            return workout.date.getYear() === date.getYear();
+        },
+        2: () => true
+    }
+
+    state = {
+        anchorEl: null,
+        filter: 0,
+    };
 
     handleSelect = (id, event, checked) => {
         this.props.updateSelected(id, checked);
     }
 
     handleDateChange = (id, selectedDate) => {
-        this.props.updateWorkout(id, { date: selectedDate });
+        const date = new Date();
+        if (selectedDate.getMonth() === date.getMonth() && selectedDate.getYear() === date.getYear()) {
+            this.props.updateWorkout(id, { date: selectedDate });
+        } else {
+            toast.error('Can only edit workouts from this month');
+        }
     }
 
     handleDescriptionChange = (id, event) => {
@@ -39,8 +70,20 @@ class WorkoutTable extends React.Component {
         this.props.updateWorkout(id, update);
     }
 
+    handleFilterOpen = event => {
+        this.setState({ anchorEl: event.currentTarget });
+    };
+
+    handleFilterClose = () => {
+        this.setState({ anchorEl: null });
+    };
+
+    handleSelectFilter = (event, index) => {
+        this.setState({ filter: index, anchorEl: null });
+    };
+
     generateRows = () => {
-        return this.props.workouts.map((workout, index) => {
+        return this.props.workouts.filter(workout => this.filters[this.state.filter](workout)).map((workout, index) => {
             const id = workout.id;
             const isSelected = this.props.selected.includes(id);
 
@@ -91,6 +134,7 @@ class WorkoutTable extends React.Component {
     }
 
     render() {
+        const { anchorEl } = this.state;
         const numSelected = this.props.selected.length;
         const anySelected = numSelected > 0;
 
@@ -110,7 +154,7 @@ class WorkoutTable extends React.Component {
                                 </Tooltip>
                             ) : (
                                     <Tooltip title='Filter list'>
-                                        <IconButton>
+                                        <IconButton onClick={this.handleFilterOpen}>
                                             <FilterListIcon />
                                         </IconButton>
                                     </Tooltip>
@@ -138,6 +182,21 @@ class WorkoutTable extends React.Component {
                             : <div className='empty-table-text'> No workouts added yet, add your first using the button below </div>
                     }
                 </div>
+                <Menu
+                    anchorEl={anchorEl}
+                    open={Boolean(anchorEl)}
+                    onClose={this.handleFilterClose}
+                >
+                    {this.filterOptions.map((option, index) => (
+                        <MenuItem
+                            key={`filter-option-${index}`}
+                            selected={index === this.state.filter}
+                            onClick={event => this.handleSelectFilter(event, index)}
+                        >
+                            {option}
+                        </MenuItem>
+                    ))}
+                </Menu>
             </div>
         )
     }

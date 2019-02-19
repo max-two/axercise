@@ -44,7 +44,7 @@ class App extends React.Component {
             this.setState({ auth }, this.updateSigninStatus.bind(null, auth.isSignedIn.get()));
             this.loadWorkouts();
         }, error => {
-            toast(JSON.stringify(error, null, 2));
+            toast.error(JSON.stringify(error, null, 2));
         });
     }
 
@@ -115,7 +115,7 @@ class App extends React.Component {
             }).then(response => {
                 cb(response.result.values);
             }, response => {
-                toast('Error: ' + response.result.error.message);
+                toast.error('Error: ' + response.result.error.message);
             });
         });
     }
@@ -203,6 +203,13 @@ class App extends React.Component {
         let workouts = this.state.workouts.slice();
         let index = workouts.findIndex(workout => workout.id === id);
 
+        const today = new Date();
+        const date = workouts[index].date;
+        if (today.getMonth() !== date.getMonth() || today.getYear() !== date.getYear()) {
+            toast.error('Can only edit workouts from this month');
+            return;
+        }
+
         workouts[index] = {
             ...workouts[index],
             status: workouts[index].status === UNSAVED ? UNSAVED : UPDATED,
@@ -215,6 +222,17 @@ class App extends React.Component {
     }
 
     deleteWorkout = () => {
+        const today = new Date();
+        const hasInvalidMonth = this.state.selected.reduce((acc, id) => {
+            const workout = this.state.workouts.find(workout => workout.id === id);
+            return acc || today.getMonth() !== workout.date.getMonth() || today.getYear() !== workout.date.getYear();
+        }, false);
+
+        if (hasInvalidMonth) {
+            toast.error('Can only edit workouts from this month');
+            return;
+        }
+
         const savedIds = this.state.selected.filter(id => {
             const workout = this.state.workouts.find(workout => workout.id === id);
             return workout && workout.status !== UNSAVED;

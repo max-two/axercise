@@ -82,8 +82,8 @@ class WorkoutTable extends React.Component {
         this.setState({ filter: index, anchorEl: null });
     };
 
-    generateRows = () => {
-        return this.props.workouts.filter(workout => this.filters[this.state.filter](workout)).map((workout, index) => {
+    generateRows = filteredWorkouts => {
+        return filteredWorkouts.map((workout, index) => {
             const id = workout.id;
             const isSelected = this.props.selected.includes(id);
 
@@ -137,6 +137,7 @@ class WorkoutTable extends React.Component {
         const { anchorEl } = this.state;
         const numSelected = this.props.selected.length;
         const anySelected = numSelected > 0;
+        const filteredWorkouts = this.props.workouts.filter(workout => this.filters[this.state.filter](workout));
 
         return (
             <div className='table'>
@@ -165,8 +166,8 @@ class WorkoutTable extends React.Component {
                     <div className='table-header' padding='checkbox'>
                         <Checkbox
                             color='primary'
-                            checked={anySelected && numSelected === this.props.workouts.length}
-                            onChange={this.props.handleSelectAll}
+                            checked={anySelected && numSelected === filteredWorkouts.length}
+                            onChange={(event, checked) => this.props.handleSelectAll(filteredWorkouts, checked)}
                         />
                     </div>
                     <div className='table-header'> Date </div>
@@ -178,7 +179,7 @@ class WorkoutTable extends React.Component {
                 <div className='table-body'>
                     {
                         this.props.workouts.length
-                            ? this.generateRows()
+                            ? this.generateRows(filteredWorkouts)
                             : <div className='empty-table-text'> No workouts added yet, add your first using the button below </div>
                     }
                 </div>

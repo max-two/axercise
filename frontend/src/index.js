@@ -273,8 +273,8 @@ class App extends React.Component {
         }
     }
 
-    handleSelectAll = (event, checked) => {
-        const selected = checked ? this.state.workouts.map(workout => workout.id) : [];
+    handleSelectAll = (filteredWorkouts, checked) => {
+        const selected = checked ? filteredWorkouts.map(workout => workout.id) : [];
         this.setState({ selected });
     }
 

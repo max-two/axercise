@@ -128,8 +128,13 @@ class App extends React.Component {
         });
     }
 
-    // TODO: validation/required fields
     saveWorkouts = () => {
+        const emptyDesc = this.state.workouts.reduce((acc, workout) => acc || !workout.description, false);
+        if (emptyDesc) {
+            toast.error('Error: all descriptions must be filled out');
+            return;
+        }
+
         this.checkSheet(() => {
             const email = this.state.email;
             const year = this.getYear();

@@ -163,8 +163,8 @@ body {
     text-align: center;
 }
 
-.sign-in {
-    position: absolute;
+.sign-in-out {
+    position: absolute !important;
     top: 20px;
     right: 10px;
 }

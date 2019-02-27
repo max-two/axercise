@@ -25,26 +25,42 @@ class App extends React.Component {
         selectedDate: new Date(),
         workouts: [],
         selected: [],
-        auth: {},
         email: ''
     }
 
     componentDidMount() {
-        gapi.load('client:auth2:signin2', this.initClient);
+        gapi.load('client:auth2', this.initClient);
     }
 
     initClient = () => {
         gapi.client.init(secrets.gapi).then(() => {
-            gapi.signin2.render('sign-in-button', {
-                scope: secrets.gapi.scope
-            });
 
             const auth = gapi.auth2.getAuthInstance();
-            auth.isSignedIn.listen(this.updateSigninStatus);
-            this.setState({ auth }, this.updateSigninStatus.bind(null, auth.isSignedIn.get()));
-            this.loadWorkouts();
+
+            if (auth.isSignedIn.get()) this.onSignIn(auth.currentUser.get());
         }, error => {
             toast.error(JSON.stringify(error, null, 2));
+        });
+    }
+
+    onSignIn = user => {
+        this.setState({ email: user.getBasicProfile().getEmail() }, this.loadWorkouts);
+    }
+
+    signIn = () => {
+        const auth = gapi.auth2.getAuthInstance();
+        auth.signIn().then(this.onSignIn);
+    }
+
+    signOut = () => {
+        const auth = gapi.auth2.getAuthInstance();
+        auth.signOut();
+
+        this.setState({
+            email: '',
+            workouts: [],
+            selected: [],
+            selectedDate: new Date()
         });
     }
 
@@ -68,14 +84,6 @@ class App extends React.Component {
         } else {
             this.setState({ email: '' });
         }
-    }
-
-    signIn = () => {
-        this.state.auth.signIn();
-    }
-
-    signOut = () => {
-        this.state.auth.signOut();
     }
 
     checkSheet = cb => {
@@ -334,7 +342,26 @@ class App extends React.Component {
                         </div>
                     </div>
                     <div className='progress-bars'>
-                        <div id='sign-in-button' className='sign-in'></div>
+                        {this.state.email ? (
+                            <Button
+                                variant='outlined'
+                                color='secondary'
+                                className='button sign-in-out'
+                                onClick={this.signOut}
+                            >
+                                Sign Out
+                            </Button>
+                        ) : (
+                                <Button
+                                    variant='outlined'
+                                    color='primary'
+                                    className='button sign-in-out'
+                                    onClick={this.signIn}
+                                >
+                                    Sign In
+                                </Button>
+                                // <div id='sign-in-button' className='sign-in'></div>
+                            )}
                         <WorkoutProgress className='progress-bar-left' label='Monthly Progress' progress={monthProgress} />
                         <WorkoutProgress className='progress-bar-right' label='Yearly Progress' progress={yearProgress} />
                     </div>
@@ -350,10 +377,22 @@ class App extends React.Component {
                         />
                     </div>
                     <div className='buttons'>
-                        <Button className='button' color='primary' variant='contained' onClick={this.addWorkout}>
+                        <Button
+                            className='button'
+                            color='primary'
+                            variant='contained'
+                            onClick={this.addWorkout}
+                            disabled={!this.state.email}
+                        >
                             Add Workout<Add className='icon' />
                         </Button>
-                        <Button className='button' color='secondary' variant='contained' onClick={this.saveWorkouts}>
+                        <Button
+                            className='button'
+                            color='secondary'
+                            variant='contained'
+                            onClick={this.saveWorkouts}
+                            disabled={!this.state.email}
+                        >
                             Save Workouts<LockOutlined className='icon' />
                         </Button>
                     </div>
